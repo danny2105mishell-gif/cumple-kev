@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Edición: Kevin 🎈</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Retro Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --poke-red: #e61919;
+            --bg-dark: #0a0505;
+        }
+        .font-pixel { font-family: 'Press Start 2P', monospace; }
+        .font-retro { font-family: 'VT323', monospace; }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(#3a0000 1px, transparent 1px),
+                radial-gradient(#3a0000 1px, #0a0505 1px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+        }
+
+        /* Animations */
+        @keyframes pack-float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(2deg); }
+        }
+        .animate-pack {
+            animation: pack-float 3s infinite ease-in-out;
+        }
+
+        @keyframes pack-shake {
+            0%, 100% { transform: rotate(0deg); }
+            20% { transform: rotate(-8deg) scale(1.05); }
+            40% { transform: rotate(8deg) scale(1.05); }
+            60% { transform: rotate(-5deg) scale(1.03); }
+            80% { transform: rotate(5deg) scale(1.03); }
+        }
+        .animate-shake {
+            animation: pack-shake 0.5s ease-in-out;
+        }
+
+        @keyframes pokeball-throw {
+            0% { transform: translate(-100px, 100px) scale(0.4) rotate(0deg); }
+            50% { transform: translate(0px, -80px) scale(1.2) rotate(360deg); }
+            100% { transform: translate(0px, 0px) scale(1) rotate(720deg); }
+        }
+        .animate-throw {
+            animation: pokeball-throw 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* Holo Shiny Card Effect */
+        .holo-shiny {
+            background: linear-gradient(135deg, rgba(230,25,25,0.3) 0%, rgba(20,0,0,0.8) 40%, rgba(255,203,5,0.3) 70%, rgba(230,25,25,0.3) 100%);
+            background-size: 200% 200%;
+            animation: holoGrad 4s infinite linear;
+        }
+        @keyframes holoGrad {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+
+        /* 3D Flip Card Effect */
+        .flip-card {
+            background-color: transparent;
+            height: 230px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .flip-card-front {
+            background: linear-gradient(135deg, #1f0000, #400000);
+            border: 3px solid #e61919;
+        }
+        .flip-card-back {
+            background: #120404;
+            color: #fff;
+            transform: rotateY(180deg);
+            border: 3px solid #ffcb05;
+            overflow-y: auto;
+        }
+
+        .imgur-img {
+            max-width: 100%;
+            max-height: 380px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .imgur-card {
+            max-width: 100%;
+            max-height: 290px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0b0f19; }
+        ::-webkit-scrollbar-thumb { background: #e61919; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-pixel flex flex-col items-center justify-center p-2 sm:p-4 select-none">
+
+    <!-- Ambient Particles Background -->
+    <div id="bg-stars" class="fixed inset-0 pointer-events-none z-0"></div>
+
+    <!-- Main GameBoy Handheld Container -->
+    <div class="relative z-10 w-full max-w-3xl bg-red-950/80 border-4 border-red-600 rounded-3xl p-3 sm:p-5 shadow-[0_0_50px_rgba(230,25,25,0.4)] flex flex-col items-center">
+
+        <!-- Console Header -->
+        <div class="w-full flex justify-between items-center mb-2 px-2 text-[10px] sm:text-xs text-red-400">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+                <span class="tracking-widest">GAME BOY ADVANCE - KEVIN BDAY</span>
+            </div>
+            <div class="flex items-center gap-3">
+                
+                
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Display Frame (Screen) -->
+        <div class="relative w-full bg-black border-4 border-slate-800 rounded-2xl overflow-hidden shadow-2xl min-h-[480px] sm:min-h-[540px] flex flex-col justify-between p-3 sm:p-5">
+            <!-- Scene Dynamic Content Container -->
+            <div id="game-scene" class="w-full h-full flex flex-col items-center justify-center relative z-10 flex-grow">
+                <!-- Scenes rendered dynamically via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL POPUP SPOTIFY SECRET PLAYER -->
+    <div id="music-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-2 border-red-500 rounded-2xl p-4 sm:p-5 max-w-lg w-full font-retro relative shadow-[0_0_30px_rgba(230,25,25,0.5)] max-h-[90vh] flex flex-col">
+            <button onclick="closeMusicModal()" class="absolute top-3 right-3 text-slate-400 hover:text-white text-lg z-10"><i class="fas fa-times"></i></button>
+            
+            <div class="flex flex-col items-center text-center space-y-3 overflow-y-auto pr-1">
+                <div class="w-20 h-20 bg-red-950 border-2 border-red-500 rounded-xl flex items-center justify-center text-3xl text-yellow-400 shadow-lg animate-pulse flex-shrink-0">
+                    🎶
+                </div>
+                <div>
+                    <span class="text-xs text-red-400 font-pixel">SPOTIMON - SECRETO</span>
+                    <h3 id="modal-song-title" class="font-pixel text-yellow-300 text-sm sm:text-base mt-1"></h3>
+                    <p id="modal-song-artist" class="text-slate-400 text-base font-bold"></p>
+                </div>
+
+                <!-- Fake Player Bar -->
+                <div class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 space-y-1.5 flex-shrink-0">
+                    <div class="flex justify-between text-xs text-slate-400 font-pixel">
+                        <span>0:00</span>
+                        <span class="text-red-400">PLAYING WITH YOU</span>
+                        <span>3:45</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                        <div class="bg-red-600 h-full w-2/3 animate-pulse"></div>
+                    </div>
+                </div>
+
+                <!-- Dedicatoria -->
+                <div class="w-full bg-red-950/50 border border-red-500/30 rounded-xl p-3 text-left max-h-[220px] overflow-y-auto">
+                    <span class="text-xs text-yellow-400 font-pixel block mb-1 sticky top-0 bg-red-950/90 py-1">💌 DEDICATORIA:</span>
+                    <p id="modal-song-dedication" class="text-slate-200 text-base sm:text-lg leading-snug whitespace-pre-line"></p>
+                </div>
+
+                <button onclick="closeMusicModal()" class="w-full py-2.5 bg-red-600 text-white font-pixel text-xs rounded-lg hover:bg-red-500 font-bold flex-shrink-0">CERRAR</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentScene = 0;
+        let isAudioOn = false;
+        let audioCtx = null;
+        const totalScenes = 12;
+
+        const imgUrls = {
+            1: "https://i.imgur.com/b7NoyMF.png",
+            2: "https://i.imgur.com/OwuuvCT.png",
+            3: "https://i.imgur.com/w6GCJMx.png",
+            4: "https://i.imgur.com/oGctseN.png",
+            5: "https://i.imgur.com/YfwS0Fa.png"
+        };
+
+        const pokeSprites = {
+            incineroar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/727.png",
+            salamence: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/373.png",
+            metagross: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/376.png"
+        };
+
+        const secretSongs = [
+            { 
+                titulo: "A vos — Milo J", 
+                artista: "Milo j", 
+                dedicatoria: "Bueno JAJAJA, esta canción tenía que estar entre las que quería dedicarte porque hay varias cositas de su letra que me hacen pensar en ti y en lo que siento por ti. Es una canción que conozco desde hace muchísimo tiempo y nunca pensé que algún día iba a terminar dedicándosela a alguien de esta manera, pero aquí estoy escribiéndote un testamento JAJAJAJA. Hay una parte que habla de lo mucho que puede llegar a significar escuchar a alguien, y no sé por qué, pero esa idea me parece demasiado bonita. Porque cuando alguien te importa de verdad, hasta las cosas más simples empiezan a tener otro significado. Como querer saber cómo estuvo su día, qué hizo, qué estuvo pensando, o escucharle contar cualquier cosa aunque no entiendas ni la mitad. Y es que a mí me gusta mucho conocerte, saber de ti, descubrir cosas nuevas y poder escucharte hablar o mejor dicho, leerte JAJA de lo que sea. No quiero que sientas que tienes que contarme solamente cosas interesantes o importantes, porque hasta las cosas más tontas me gusta saberlas si vienen de ti. Y creo que eso es algo que me pasa mucho contigo, que me nace compartirte cualquier cosa y también quiero que tú puedas hacer lo mismo conmigo, tipo que me cuentes qué hiciste, qué comiste, con quién hablaste, a quién miraste y cosas así, ¿sabes? JAJAJA.\n\nMe gusta saber que poco a poco vamos conociéndonos más y que todavía hay tantas cosas que no sé de ti. A veces me pongo a pensar en eso y me da mucha ilusión, porque todavía tenemos un montón de historias por contarnos y cosas por descubrir del otro. Es bonito saber que no tengo que conocerlo todo de ti ahora mismo y que podemos ir haciéndolo poquito a poquito.\n\nOtra cosa que me hizo pensar mucho en ti es esa parte en la que habla de querer estar para alguien cuando no se encuentre bien. Y es que yo quiero eso contigo también. No quiero ser alguien con quien solamente puedas compartir las cosas bonitas o los días en los que todo te sale bien. Quiero que también puedas contarme cuando estés cansado, cuando algo te preocupe o cuando simplemente no tengas un buen día. No tienes que estar siempre feliz ni tener todo resuelto, también puedes tener tus momentos complicados y eso no va a hacer que deje de quererte. Quiero escucharte y entenderte incluso cuando no sepas muy bien cómo explicar lo que te pasa. Me gusta conocerte tal y como eres, con tus ocurrencias, tus pensamientos, tus días buenos y los no tan buenos. Quiero saber de tus sueños, de las cosas que te hacen ilusión, de aquello que te preocupa y de todo eso que quizá no sueles contarle a cualquier persona. No sé, me gusta pensar que todavía me queda muchísimo por conocer de ti y que voy a poder hacerlo mientras seguimos compartiendo nuestras cositas. También me gusta esa sensación de la canción de encontrar a alguien que termina importándote muchísimo casi sin darte cuenta. Porque de verdad que a veces me pongo a pensar en lo rápido que te volviste alguien tan especial para mí. Me hace mucha ilusión tenerte en mi vida y poder compartir contigo esta relación tan bonita que estamos empezando. Me gusta quererte, amarte, y me gusta que seas tú esa persona a la que quiero contarle mis cosas, con la que quiero compartir mis días y a la que quiero seguir conociendo cada vez más. Y aunque llevemos poquito tiempo juntos, no significa que lo que siento sea poquito también. Al contrario, me emociona muchísimo pensar en todo lo que nos queda por vivir y en todas las cosas que todavía podemos aprender el uno del otro. Quiero que tengamos la confianza de hablar de cualquier cosa, de decirnos cuando algo nos molesta, de apoyarnos y de seguir construyendo algo bonito sin tener que fingir que siempre todo es perfecto. Porque para mí también se trata de eso, de poder ser nosotros mismos y sentirnos cómodos siendo quienes somos.\n\nNo sé si estoy explicando bien todo lo que quiero decirte con esta canción JAJAJA, pero en pocas palabras quiero que sepas que me importas muchísimo y que de verdad quiero estar para ti. Quiero escucharte, conocerte, acompañarte y que nunca sientas que tienes que guardarte las cosas. Me interesa todo lo que tenga que ver contigo y espero que con el tiempo puedas darte cuenta de eso.\n\nAsí que cuando escuches esta canción acuérdate de mí y de que tienes a una personita que quiere saberlo todo de ti JAJAJA. Incluso esas cosas que consideres insignificantes, porque para mí no lo son si vienen de ti. Y espero que nunca olvides que me hace muy feliz poder compartir esta etapa contigo y que tengo muchísimas ganas de seguir conociéndote y queriéndote cada día un poquito más.\n\nTe amo muchísimo, mi bonito." 
+            },
+            { 
+                titulo: "Solo por vos — Trueno", 
+                artista: "Trueno", 
+                dedicatoria: "Esta canción tenía que estar entre las que quería dedicarte porque hay algo en ella que me hace pensar muchísimo en ti. ¿Quién iba a pensar que entre tanta gente iba a terminar encontrándome con alguien como tú? Yo seguía con mi vida sin imaginar que en algún momento ibas a aparecer y que terminarías convirtiéndote en alguien tan importante para mí.\n\nA veces me pongo a pensar en todas las casualidades que tuvieron que pasar para que hoy estemos acá y me parece una locura JAJAJA. Porque perfectamente podríamos no habernos conocido o nuestras vidas podrían haber seguido por caminos completamente distintos, pero pasó y qué suerte que fue así. Me alegra muchísimo que nuestros caminos se hayan cruzado y poder compartir esta etapa con vos. No sé cómo explicarlo, pero hay algo muy lindo en saber que entre tantas personas terminé coincidiendo con alguien a quien hoy quiero tanto.\n\nY aunque a veces me cueste encontrar las palabras para decirte todo lo que siento, nunca significa que no tenga cosas para decirte. Al contrario, tengo demasiadas cosas que decirte, pero no sé ni cómo empezar, y bueno, por eso ahora tienes varios de estos testamentos JAJAJA. A veces quiero explicarte cuánto te amo o lo importante que eres para mí y siento que ninguna palabra alcanza. Pero quiero que sepas que siempre voy a intentar demostrártelo de alguna manera, incluso en esas pequeñas cosas que quizás parecen insignificantes. Porque no quiero que tengas que adivinar lo que siento ni que dudes del cariño que te tengo.\n\nTambién quiero que sepas que puedes contar conmigo. No solamente cuando todo esté bien o cuando tengas un día bonito, sino también cuando las cosas no salgan como esperabas, cuando estés cansado o cuando simplemente necesites hablar con alguien. No tienes que fingir que todo está perfecto conmigo ni sentir que siempre tienes que poder con todo. Me importa cómo estás y quiero poder acompañarte en las distintas etapas que te toque vivir. Obviamente no puedo resolverte todo JAJAJA, pero sí puedo escucharte y hacerte saber que no tienes que pasar por cada cosa sintiéndote solo. Y bueno, amor, hoy es tu cumpleaños y no quería dejar pasar la oportunidad de recordarte lo especial que eres y lo mucho que me alegra que estés en este mundo. Espero que este nuevo año te traiga muchísimas cosas bonitas, que puedas cumplir tus metas, que tengas nuevas oportunidades y que nunca te falten motivos para estar orgulloso de ti mismo. Deseo que seas muy feliz y que la vida te sorprenda con cosas tan lindas como las que mereces. Ojalá cuando escuches esta canción te acuerdes un poquito de mí y de todo lo que quise transmitirte con ella. Porque si hay algo que quiero que sepas es que entre tanta gente tuve la suerte de coincidir contigo y no sabes lo feliz que me hace eso. Gracias por haber llegado a mi vida y por dejarme formar parte de la tuya. Feliz cumpleaños, mi vidita hermoso. Te amo muchísimo y espero que este sea uno de muchísimos cumpleaños que pueda celebrar junto a ti." 
+            },
+            { 
+                titulo: "Reflejo — Caracol TV", 
+                artista: "Caracol Televisión", 
+                dedicatoria: "Sabes que hay algo que me pasa contigo, y es que a veces me pongo a pensar en cómo era mi vida antes de conocerte y me cuesta imaginar que hubo un tiempo en el que todavía no formabas parte de ella. No porque antes me faltara algo para estar bien, sino porque ahora tengo la suerte de tenerte y hay cosas que se sienten diferentes desde que llegaste. Es increíble cómo una persona puede aparecer y terminar ocupando un lugar tan grande sin que uno se dé cuenta de cuándo empezó a pasar.\n\nY si pudiera pedirte algo sería tenerte cerquita en muchísimos de esos momentos en los que me gustaría poder detener un ratito el tiempo. Poder mirarte y decirte todas esas cosas que a veces se me quedan dando vueltas en la cabeza. Porque tengo demasiadas ganas de demostrarte cuánto te quiero y de que nunca te quedes con la duda de lo importante que eres para mí. A veces siento que ni con todas las palabras del mundo conseguiría explicártelo JAJAJA.\n\nHay algo que me parece muy lindo de todo esto: tener tantas cosas que quisiera decirte y encontrar en la música una forma de hacerlo. Porque a veces escucho una canción y pienso en todo lo que me gustaría que supieras, en todos esos sentimientos que me cuesta acomodar en palabras y en lo bonito que es poder dedicártela. Esta es una de esas canciones que ahora tienen un significado especial para mí por ti.\n\nHoy, en tu cumpleaños, quiero que recibas todo el cariño que mereces y que este nuevo año te traiga muchísimas razones para sonreír y sentirte feliz. Deseo que se te cumplan esas cosas que tanto quieres y que nunca pierdas las ganas de ir por todo aquello que te hace ilusión. Me alegra muchísimo que estés cumpliendo un año más y poder formar parte de este día de alguna manera.\n\nY nada, mi vida, esta canción es para ti, porque hay sentimientos que no siempre sé cómo explicar, pero que quiero que conozcas. Ojalá pudiera hacerte llegar un poco de todo lo que siento cada vez que te digo que te amo. Feliz cumpleaños, amor. Te amo muchísimo." 
+            },
+            { 
+                titulo: "Una Lady Como Tú — Manuel Turizo", 
+                artista: "Manuel Turizo", 
+                dedicatoria: "JAJAJA, primero que nada, no te confundas con el título de esta canción, porque sí, amor, te estoy dedicando Una Lady Como Tú, y no, no te estoy diciendo lady ni nada de eso. Sé que eres un hombre y eso no tiene nada que ver con por qué elegí esta canción para ti. La elegí por lo que transmite y por varias cositas de su letra que me hicieron pensar en lo que siento por ti.\n\nHay algo muy lindo en eso de tener a alguien tan presente que hasta en los momentos más normales del día terminas pensando en esa persona. Y me pasa mucho contigo, a veces estoy haciendo cualquier cosa y de la nada apareces en mis pensamientos JAJAJA. Es como que siempre hay algo que me termina llevando a ti, ya sea una canción, alguna cosa o simplemente un recuerdo.\n\nTambién me identifico con esa idea de que alguien puede hacer que hasta un día que no venía siendo tan bueno termine teniendo algo bonito. Porque hay días en los que puedo estar cansada o tener mil cosas en la cabeza y hablar contigo termina siendo una de esas cositas que me alegran. Y no es que tengas que hacer algo especial para conseguirlo, a veces con hablar un ratito ya me cambia el ánimo.\n\nY otra cosa que quería decirte es que me encanta que seas alguien que me inspire a querer mejorar, porque cuando uno quiere tanto a alguien también le nacen ganas de darle lo mejor de sí. Quiero seguir aprendiendo a querer bonito, a expresarme mejor y a cuidar lo que tenemos. Sé que no soy perfecta y que también tengo mis cosas JAJAJA, pero quiero poner de mi parte y que tú puedas sentir todo el cariño que te tengo.\n\nA veces me da mucha ternura pensar en lo mucho que te quiero y en todas las cosas que me gustaría hacerte sentir. Porque no quiero que mi cariño se quede solamente en palabras bonitas, también quiero que se note en cómo te trato, cómo te escucho y cómo estoy para ti. Quiero que tengas presente que eres alguien muy importante para mí y que no tienes que estar preguntándote si te quiero o si pienso en ti, porque la respuesta es sí, sí lo hago JAJAJA.\n\nY bueno, esta canción tenía que formar parte de tu regalito, aunque el título nos haya puesto un pequeño problema JAJAJA. Espero que cuando la escuches te acuerdes de mí y entiendas por qué terminé eligiéndola para ti. Porque si hay algo que tengo clarísimo es que me encanta quererte y que me hace muy feliz que seas tú esa persona en la que pienso tantas veces al día.\n\nTe amo muchísimo, amor. Feliz cumpleaños otra vez, espero que te haya sacado al menos una sonrisita esta dedicatoria y que no te me hagas el lady ahora JAJAJA." 
+            },
+            { 
+                titulo: "My One and Only Love — Mon Laferte", 
+                artista: "Mon Laferte", 
+                dedicatoria: "Esta canción me hace pensar mucho en lo que es querer a alguien y entender que no todo tiene que ser perfecto para que algo sea especial. Porque al final somos dos personas distintas y cada uno tiene su forma de pensar, de sentir y de hacer las cosas. Obviamente no siempre vamos a coincidir en todo y seguramente habrá momentos en los que nos cueste un poquito entendernos JAJAJA, pero creo que lo importante es que podamos hablarlo y no dejar de tenernos paciencia. Yo no espero que todo sea perfecto ni que nunca nos equivoquemos, solo quiero que podamos aprender de cada cosa y que siempre tengamos ganas de hacer las cosas bien.\n\nNo sabemos qué nos espera más adelante y sería imposible tener todo planeado, pero sí sé que quiero cuidar esto tan bonito que tenemos. Quiero que podamos seguir aprendiendo de nosotros mismos y del otro, que no nos falten las ganas de arreglar las cosas cuando algo no salga bien y que nunca dejemos de tratarnos con ese cariño que tanto importa. Porque para mí querer a alguien también es eso, no solamente estar cuando todo es bonito, sino tener la disposición de cuidar lo que tenemos incluso cuando las cosas se ponen un poquito complicadas.\n\nY bueno JAJAJA, no quiero hacerte otro testamento enorme hablando de lo mismo de siempre, pero sí quería que esta canción formara parte de tu regalito porque tiene un sentimiento que quería transmitirte. No necesito ni puedo prometerte que todo va a ser perfecto ni decirte que nunca habrá días difíciles. Lo que sí quiero es que sepas que tengo muchas ganas de seguir construyendo algo bonito contigo y que me importa muchísimo lo que estamos formando.\n\nTe amo demasiado. Espero que nunca dudes de lo mucho que te quiero y de las ganas que tengo de cuidar esto nuestro. Gracias por ser parte de mi vida y por dejarme ser parte de la tuya." 
+            },
+            { 
+                titulo: "Por ti — 3AM", 
+                artista: "3AM", 
+                dedicatoria: "Esta canción tiene algo que me hace pensar mucho en ti, y es que habla de tener a alguien tan presente que termina apareciendo hasta en los pensamientos más inesperados. Y no te voy a mentir, porque a mí me pasa bastante: a veces estoy haciendo cualquier cosa y de la nada me acuerdo de ti. Puede ser por algo que dijiste, por alguna conversación o por cualquier tontería que me haya quedado dando vueltas. Es muy chistoso porque estoy concentrada en otra cosa y mi cabeza decide ponerse a pensar en mi novio JAJAJA.\n\nTambién me pasa que hay cosas tuyas que se me quedan grabadas aunque sean detalles súper pequeños. Algunas palabras, ciertas expresiones o cosas que haces sin darte cuenta. Y capaz para ti no tienen tanta importancia, pero yo después las recuerdo y me da mucha ternura. No sé, me gusta tener esos recuerdos tuyos guardaditos y que de repente aparezcan cuando menos me lo espero.\n\nY hay algo que valoro muchísimo, y es sentir que puedo mostrarte distintas partes de mí. No solamente las más bonitas o las que son fáciles de explicar, también esas que a veces me cuesta compartir. Porque no siempre sé cómo expresar lo que me pasa y puedo llegar a ser bastante complicada con mis propios pensamientos JAJAJA. Pero me gusta poder ser sincera contigo y espero que tú también puedas sentir esa confianza conmigo.\n\nSé que a veces podemos tener dudas o pensar demasiado las cosas, porque al final somos personas y no siempre tenemos todo claro. Incluso la canción tiene esa incertidumbre de no saber si todo va a durar para siempre, y creo que es algo bastante real. Nadie puede saber exactamente qué va a pasar dentro de muchos años, pero eso no quita lo bonito de querer a alguien hoy y tener ganas de seguir eligiendo esa relación. Yo no necesito tener todas las respuestas ahora, me gusta saber que lo que siento por ti es sincero y que quiero cuidar esto que tenemos.\n\nY ay, mi niño, si supieras todas las veces que me quedo pensando en lo mucho que te amo JAJAJA. A veces siento que soy demasiado repetitiva diciéndote lo mismo, pero es que de verdad me nace. Me gusta poder decírtelo, escribirlo y encontrar cualquier excusa para recordártelo.\n\nQuería que esta canción también formara parte de tu regalo porque tiene mucho de ese sentimiento de estar enamorada y llevar a alguien contigo incluso cuando no está al lado. Y hoy que estoy preparando todo esto para ti me hace mucha ilusión pensar que vas a poder leer cada una de estas cositas y saber que detrás de ellas hay muchísimo cariño.\n\nFeliz cumpleaños otra vez, amor. Ojalá esta nueva edad te regale experiencias preciosas y que nunca te falten personas que te quieran de verdad. Y espero que cuando escuches esta canción te acuerdes de que por acá hay una niña que piensa muchísimo en ti y que te ama como no tienes idea JAJAJA." 
+            },
+            { 
+                titulo: "Mamichula — Trueno ft. Nicki Nicole", 
+                artista: "Trueno ft. Nicki Nicole", 
+                dedicatoria: "JAJAJAJA, bueno, creo que también esta canción necesita más explicaciones de todas las que te estoy dedicando. No, tampoco te estoy diciendo mamichula KJASDKJASD, aunque si quieres también puedo decirte papichulo para compensar JAJAJAJA. Ya fuera de broma, elegí esta canción por varias cositas que tiene y que me hacen pensar en ti.\n\nPrimero que nada, me da mucha risa toda esa actitud que tiene JAJAJA: es como alguien que va por la vida haciendo lo suyo sin preocuparse demasiado por lo que puedan decir los demás. Y hay algo de eso que me gusta, esa personalidad de tener tus propios principios y no cambiar quién eres para quedar bien con todo el mundo. Obviamente no te estoy diciendo que seas Trueno, porque tampoco es que te guste ni que andes por Madrid desapareciendo JAJAJA, pero ya entiendes por dónde va la cosa.\n\nTambién está esa parte de la canción que habla de alguien que no se deja llevar por los rumores y que tiene sus propios valores. Y me parece lindo porque al final las personas somos mucho más que lo que alguien pueda contar de nosotros o la primera impresión que se lleven. Me gusta poder descubrir esas partes tuyas que quizás no todo el mundo conoce y tener nuestras propias opiniones el uno del otro sin necesidad de meternos en lo que digan afuera.\n\nY NO PUEDO DEJAR DE MENCIONAR LO DE CUPIDO Y EL EGO KJASDKJASD, porque me parece una forma bastante chistosa de hablar de dejarse de hacer el orgulloso cuando aparece alguien que te mueve un poquito el piso. Aunque bueno, en nuestro caso espero que cupido esté haciendo bien su trabajo, porque bastante ocupado nos tiene a nosotros dos JAJAJAJA.\n\nOtra cosa que me gusta es esa energía de la canción de estar dispuesto a recorrer lo que haga falta para encontrarse con esa persona. No necesariamente tiene que ser algo enorme, a veces basta con tener las ganas y poner de tu parte para que un encuentro suceda. Y ojalá algún día podamos tener muchas de esas historias que ahora solo imaginamos.\n\nEn fin, mi amor, esta canción tenía que estar en tu regalo, y aunque el título no ayude demasiado, espero que hayas entendido por qué la elegí JAJAJA. No todas las canciones tienen que ser súper sentimentales para tener un significado bonito, y esta tiene ese toque de locura y humor que también quería incluir entre tus dedicatorias.\n\nTe amo muchísimo, mi papichulo KJASDKJASD. Feliz cumpleaños, mi niño hermoso. Y no te acostumbres al apodo, que fue una excepción por motivos musicales JAJAJAJAJAJAJA." 
+            },
+            { 
+                titulo: "Lauryn — Trueno", 
+                artista: "Trueno", 
+                dedicatoria: "JAJAJAJA, esta canción tenía que estar entre las elegidas y creo que ya te imaginarás por qué. A ver que si hablamos de vuelos y viajes, creo que tenemos un tema bastante pendiente nosotros dos KJASDKJASD. Si por mí fuera ya estaría comprando un pasaje para ir a verte y no tener que conformarme con una pantallita para hablarte. Es que imagínate poder estar en el mismo lugar y hacer todas esas cositas que ahora nos toca imaginar o dejar para cuando podamos encontrarnos.\n\nMe pongo a pensar en todas las cosas que podríamos hacer si no tuviéramos tantos kilómetros de por medio. Salir a caminar sin tener que estar pendientes de la hora o de cuándo toca despedirse, conocer lugares juntos, ir a comer algo, hacer cualquier plan por más tonto que sea. Hasta me daría curiosidad hacer cosas tan normales como acompañarte a algún lado o pasar una tarde haciendo absolutamente nada JAJAJA. Son esas pequeñas situaciones que capaz para otras personas son de lo más común, pero que nosotros todavía tenemos pendientes.\n\nY hay una parte de la canción que habla de poder mirar a alguien a través de sus propios ojos, y digo: «Ay, amor, si tan solo pudieras verte un ratito como te veo yo». Me da curiosidad saber qué pensarías si pudieras ver todas esas cositas que noto de ti y que quizás ni te das cuenta de que tienes. A veces quisiera tener esa posibilidad aunque sea por unos segundos para que entendieras por qué te tengo tanto cariño y por qué me pareces alguien tan especial.\n\nTambién me gusta esa idea de no andar corriendo las cosas. Porque sí, obvio que quiero verte y no sabes cuánto JAJAJA, pero tampoco quiero que todo se convierta en estar contando los días y esperando a que llegue el momento. Quiero que podamos disfrutar lo que tenemos mientras vamos haciendo posible todo lo que nos falta. La distancia tiene sus complicaciones y hay días en los que se nota muchísimo más que otros, pero eso no significa que no podamos seguir juntando momentos a nuestra manera.\n\nY hablando de viajes, quiero dejar constancia de que cuando nos veamos tengo una lista de cosas que quiero hacer contigo y probablemente voy a querer hacerlas todas en un mismo día KJASDKJASD. Así que anda preparándote, porque no pienso desperdiciar la oportunidad de tenerte ahí y poder decirte: «Bueno, ¿y ahora a dónde vamos?», aunque después ninguno sepa qué hacer JAJAJAJA.\n\nEn fin, mi amor, elegí Lauryn porque me gusta esa imagen de tener un viaje pendiente con alguien y todas las posibilidades que vienen con eso. Porque aunque ahora nos toque estar en lugares distintos, todavía tenemos un montón de experiencias por delante y yo tengo muchísimas ganas de que algún día podamos vivirlas sin una pantalla de por medio.\n\nTe amo muchísimo, mi niño, y espero que algún día ese vuelo deje de ser parte de una canción y se convierta en el viaje que tanto tenemos pendiente. Y por favor, que sea en primera clase como prometió Trueno JAJAJAJA." 
+            },
+            { 
+                titulo: "Mon Amour — Zzoilo & Aitana", 
+                artista: "Zzoilo & Aitana", 
+                dedicatoria: "Esta canción me da demasiada ternura y tenía que dedicártela sí o sí. Es que tiene esa forma tan bonita y hasta un poquito loca de estar enamorado, de tener tantas cosas para decirle a alguien que al final terminas pareciendo un loquito JAJAJA. Y no sé tú, pero yo siento que cuando alguien te gusta muchísimo hasta las cosas más normales se vuelven motivo para acordarte de esa persona. De repente escuchas algo y quieres contárselo, te pasa cualquier tontería y piensas que tienes que compartirla con esa persona. Y bueno, qué te puedo decir si yo tengo a un argentino ocupando bastante espacio en mi cabeza KJASDKJASD.\n\nMe encanta esa forma de querer decir lo que sientes sin darle tantas vueltas. Porque hay veces en las que las palabras salen medio torpes o una no sabe cómo empezar a explicar todo lo que lleva dentro, pero igual las dice porque le nace. Y creo que eso tiene mucho que ver conmigo cuando se trata de ti JAJAJA. Capaz te digo algo súper bonito y después me quedo sin saber qué responder cuando me dices algo lindo. Soy un caso perdido.\n\nY hablando de palabras, me dio mucha risa lo de decir \"te quiero\" en distintos idiomas, porque mira que yo podría aprenderme todos los idiomas del mundo y aun así seguramente encontraría nuevas formas de decirte cuánto te amo. Aunque creo que con el corazoncito que te hice ya te quedó bastante claro que estoy dispuesta a buscar hasta en el último idioma cómo decírtelo JAJAJAJA. Y bueno, todavía me quedan muchísimas formas de recordarte lo mucho que te amo, así que vas a tener que tenerme paciencia KJASDKJASD.\n\nTambién me gusta mucho esa parte de la canción que compara estar con alguien con esas pequeñas cosas que hacen feliz un día. Como el olor a café por la mañana o imaginar una ciudad preciosa y sentir que no necesitas demasiado para disfrutarla. Y no sé, me parece bonito que alguien pueda asociar tantas cosas cotidianas con una persona. Hasta me da curiosidad saber cuántas cosas de tu día terminan recordándote a mí JAJAJA, porque yo tengo algunas bastante inesperadas.\n\n¡AY, LO DE TENER CARA DE TONTO CUANDO TE MIRAN! No voy a decir nada porque después me vas a molestar, pero me parece demasiado chistoso ese sentimiento de no poder disimular lo mucho que te gusta alguien. Es como que por más que intentes hacerte el normal se te termina notando todo. Así que si alguna vez te pones así conmigo no te preocupes que no pienso juzgarte, probablemente esté igual de tonta JAJAJAJA.\n\nEn fin, mi amor, elegí Mon Amour porque tiene esa mezcla de emoción, ternura y un poquito de locura que me encanta. Porque querer a alguien también puede ser eso, tener ganas de gritarlo a los cuatro vientos, ponerse nerviosa y terminar diciendo cualquier cosa cuando intentas explicar lo que sientes.\n\nTe amo muchísimo. Mon amour, je t'aime, ti amo, te amo en todos los idiomas que me alcance aprender y en los que todavía ni conozco. Aunque por ahora te lo voy a seguir diciendo en español porque es donde menos posibilidades tengo de equivocarme JAJAJA." 
+            },
+            { 
+                titulo: "Machu Picchu — Camilo & Evaluna", 
+                artista: "Camilo & Evaluna", 
+                dedicatoria: "Esta canción me hace preguntarme qué fue lo que viste en mí para terminar quedándote por acá. Porque a ver, mi amor, seamos sinceros: yo no soy precisamente la persona más tranquila del mundo KJASDKJASD, a veces digo cualquier cosa, hago cada ocurrencia y puedo pasar de estar hablando normal a salir con una tontería de la nada. Así que cuando escucho esa parte de que uno está medio loco por haberse fijado en el otro me da demasiada risa, porque siento que tranquilamente podríamos estar los dos preguntándonos lo mismo JAJAJAJA.\n\nPero fuera de bromas, hay algo de esta canción que me gusta mucho, y es eso de no haber tenido que disfrazarme para tener a alguien. Porque contigo no siento que tenga que estar midiendo cada cosa que digo ni intentando parecer alguien distinta para gustarte. Puedo ser yo con mis ocurrencias, mis momentos de vergüenza, mis cambios de humor y todas esas cosas que vienen incluidas en el paquete JAJAJA. Y LO DE LAS RUINAS DE MACHU PICCHU ME DA AÑOS DE VIDA 😭 JAJAJAJA. No sé si decir que yo también tengo unas cuantas o si directamente necesitamos un mapa para encontrar todo lo que pasa por mi cabeza. A veces puedo ser un desastre explicándome y decir cosas sin pensar demasiado, pero bueno, al menos nunca te vas a aburrir conmigo KJASDKJASD. Igual me parece bonito que alguien pueda ver más allá de todos esos pequeños desastres y encontrar algo que le guste ahí.\n\nY hay otra cosa que me deja pensando, y es esa pregunta de qué pasa cuando uno le pasa por la cabeza al otro. Porque me da curiosidad saber qué se te viene a la mente cuando estás conmigo, si te acuerdas de alguna tontería que dije, si te da risa algo que hicimos o si de repente te quedas pensando en alguna de mis ocurrencias. Me gustaría saber esas pequeñas cosas que quizás ni te das cuenta de que haces JAJAJA.\n\nAsí que sí, mi amor, esta canción tenía que estar entre las elegidas porque tiene ese lado divertido de dos personas que por alguna razón terminaron encontrándose y todavía pueden preguntarse qué vieron el uno en el otro. Y aunque yo no tenga una respuesta exacta para explicar cómo llegaste a ocupar este lugar en mi vida, sí sé que me alegra muchísimo que haya pasado. No hace falta que seas perfecto ni que tengas todas las respuestas, y tampoco espero serlo yo. Prefiero que sigamos siendo estos dos loquitos aprendiendo a quererse con sus ocurrencias y sus pequeñas rarezas.\n\nFeliz cumpleaños, mi niño hermoso. Y si algún día vuelves a preguntarte qué vi en vos, te puedo hacer una lista larguísima, aunque probablemente termine desviándome y hablando de cualquier otra cosa JAJAJAJA. Te amo muchísimo, bonito, y gracias por haberte fijado en esta loquita también." 
+            }
+        ];
+
+        function renderScene() {
+            const container = document.getElementById('game-scene');
+            
+            switch (currentScene) {
+                case 0: container.innerHTML = renderSceneQuestion(); break;
+                case 1: container.innerHTML = renderSceneIntro(); break;
+                case 2: container.innerHTML = renderSceneSilhouette(); break;
+                case 3: container.innerHTML = renderSceneCaught(); break;
+                case 4: container.innerHTML = renderSceneBoosterPack(); break;
+                case 5: container.innerHTML = renderSceneExCard(); break;
+                case 6: container.innerHTML = renderSceneReasons3D(); break;
+                case 7: container.innerHTML = renderSceneSpotimonSecret(); break;
+                case 8: container.innerHTML = renderSceneBag(); break;
+                case 9: container.innerHTML = renderSceneShop(); break;
+                case 10: container.innerHTML = renderSceneInventory(); break;
+                case 11: container.innerHTML = renderSceneSave(); break;
+            }
+        }
+
+        // SCENE 0: PREGUNTA INICIAL
+        function renderSceneQuestion() {
+            return `
+                <div class="flex flex-col items-center justify-center text-center space-y-6 w-full animate-fade-in py-4">
+                    <h1 class="text-xl sm:text-2xl font-bold text-yellow-300 font-pixel drop-shadow-md">
+                        ¡HOLA KEVIN! ❤️
+                    </h1>
+                    
+                    <div class="flex justify-center items-center gap-4 py-2">
+                        <img src="${pokeSprites.incineroar}" alt="Incineroar" class="w-20 h-20 sm:w-24 sm:h-24 object-contain animate-bounce">
+                        <img src="${pokeSprites.salamence}" alt="Salamence" class="w-24 h-24 sm:w-28 sm:h-28 object-contain animate-pulse">
+                        <img src="${pokeSprites.metagross}" alt="Metagross" class="w-20 h-20 sm:w-24 sm:h-24 object-contain animate-bounce">
+                    </div>
+
+                    <div class="bg-slate-900 border-2 border-red-600 rounded-xl p-4 w-full">
+                        <p class="text-base sm:text-xl text-white font-retro">¿Aceptas ser mi Entrenador Favorito hoy y por siempre?</p>
+                    </div>
+
+                    <div class="relative w-full h-20 flex justify-center items-center gap-6">
+                        <button onclick="playBeep(); nextScene();" class="px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-pixel text-xs rounded-xl border-4 border-red-400 shadow-xl transition transform active:scale-95">
+                            ¡SÍ, ACEPTO!
+                        </button>
+                        <button id="fugitiveNo" onmouseover="escapeNoBtn()" onclick="escapeNoBtn()" class="px-6 py-3 bg-slate-800 text-slate-400 font-pixel text-xs rounded-xl border-2 border-slate-600 transition">
+                            NO
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function escapeNoBtn() {
+            const btn = document.getElementById("fugitiveNo");
+            if (btn) {
+                const randomX = (Math.random() - 0.5) * 220;
+                const randomY = (Math.random() - 0.5) * 120;
+                btn.style.transform = `translate(${randomX}px, ${randomY}px)`;
+            }
+        }
+
+        // SCENE 1: START SCREEN
+        function renderSceneIntro() {
+            return `
+                <div class="flex flex-col items-center justify-between w-full h-full space-y-3">
+                    <div class="w-full bg-black rounded-xl p-1 border-2 border-red-500 overflow-hidden shadow-2xl flex justify-center items-center">
+                        <img src="${imgUrls[1]}" alt="Pokemon Kevin" class="imgur-img">
+                    </div>
+                    <button onclick="playBeep(); nextScene();" class="w-full py-3 bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-pixel text-xs sm:text-sm rounded-xl border-4 border-amber-600 shadow-xl transition transform active:scale-95 animate-pulse flex items-center justify-center gap-2">
+                        <i class="fas fa-play"></i> PRESS START
+                    </button>
+                </div>
+            `;
+        }
+
+        // SCENE 2: SILHOUETTE
+        function renderSceneSilhouette() {
+            return `
+                <div class="flex flex-col items-center justify-between w-full h-full space-y-3">
+                    <div class="w-full bg-black rounded-xl p-1 border-2 border-red-500 overflow-hidden shadow-2xl flex justify-center items-center">
+                        <img id="silhouette-target" src="${imgUrls[2]}" alt="Quien es ese novio" class="imgur-img">
+                    </div>
+                    <button onclick="catchPokemon()" class="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-pixel text-xs sm:text-sm rounded-xl border-4 border-red-800 shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2">
+                        <span class="w-4 h-4 rounded-full bg-white border-2 border-black inline-block"></span> [ CONTINUAR ]
+                    </button>
+                </div>
+            `;
+        }
+
+        function catchPokemon() {
+            playBeep();
+            const target = document.getElementById('silhouette-target');
+            if (target) {
+                target.classList.add('animate-throw');
+                setTimeout(() => { triggerConfetti(); nextScene(); }, 800);
+            } else { nextScene(); }
+        }
+
+        // SCENE 3: CAUGHT
+        function renderSceneCaught() {
+            return `
+                <div class="flex flex-col items-center justify-between w-full h-full space-y-3">
+                    <div class="w-full bg-black rounded-xl p-1 border-2 border-red-500 overflow-hidden shadow-2xl flex justify-center items-center">
+                        <img src="${imgUrls[3]}" alt="Atrapado Kevin" class="imgur-img">
+                    </div>
+                    <button onclick="playBeep(); triggerConfetti(); nextScene();" class="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold font-pixel text-xs sm:text-sm rounded-xl border-4 border-red-400 shadow-xl transition transform active:scale-95">
+                        [ CONTINUAR ]
+                    </button>
+                </div>
+            `;
+        }
+
+        // SCENE 4: BOOSTER PACK
+        function renderSceneBoosterPack() {
+            return `
+                <div class="flex flex-col items-center justify-between w-full h-full py-2 space-y-3">
+                    <div id="booster-pack" onclick="openPack()" class="cursor-pointer w-full bg-black rounded-xl p-1 border-2 border-yellow-400 overflow-hidden shadow-2xl animate-pack hover:scale-105 transition flex justify-center items-center">
+                        <img src="${imgUrls[4]}" alt="Sobre Pokemon" class="imgur-img">
+                    </div>
+                </div>
+            `;
+        }
+
+        function openPack() {
+            playBeep();
+            const pack = document.getElementById('booster-pack');
+            if (pack) {
+                pack.classList.add('animate-shake');
+                setTimeout(() => { triggerConfetti(); nextScene(); }, 600);
+            }
+        }
+
+        // SCENE 5: CARTA ULTRA RARA
+        function renderSceneExCard() {
+            return `
+                <div class="flex flex-col items-center justify-between w-full h-full space-y-2">
+                    <div class="w-full bg-black rounded-xl p-2 border-2 border-yellow-400 overflow-hidden shadow-2xl holo-shiny flex justify-center items-center">
+                        <img src="${imgUrls[5]}" alt="Carta Kevin EX" class="imgur-card">
+                    </div>
+
+                    <div class="bg-slate-900 border-2 border-red-600 rounded-xl p-3 w-full text-left overflow-y-auto max-h-[120px]">
+                        <p class="text-sm sm:text-base text-slate-100 font-retro leading-snug">
+                            ¡FELICIDADES, ENTRENADOR! Has abierto un sobre extremadamente raro y desbloqueado una carta de edición ultra limitada. A partir de hoy, dejas atrás el nivel anterior para explorar un mapa completamente nuevo. No importa la distancia, las pantallas ni los kilómetros que nos separen nuestro equipo es el mejor y siempre jugamos en cooperativo. Gracias por ser mi compañero de aventuras favorito, por dejarte atrapar por mi amor en esta red y por subir de nivel a mi lado. ¡FELIZ CUMPLE MI VIDA!
+                        </p>
+                    </div>
+
+                    <button onclick="playBeep(); nextScene();" class="w-full py-2 bg-red-600 hover:bg-red-500 text-white font-pixel text-xs rounded-xl border-4 border-red-400 shadow-xl transition transform active:scale-95">
+                        [ CONTINUAR ]
+                    </button>
+                </div>
+            `;
+        }
+
+        // SCENE 6: RAZONES POR LAS QUE TE AMO
+        function renderSceneReasons3D() {
+            return `
+                <div class="flex flex-col items-center justify-between w-full h-full space-y-2">
+                    <h3 class="text-xs sm:text-sm text-yellow-300 font-pixel text-center">✨ COSAS QUE ME GUSTAN DE TI</h3>
+                    <p class="text-slate-400 font-retro text-base text-center">Toca cada carta para voltearla y leer:</p>
+
+                    <div class="grid grid-cols-2 gap-3 w-full my-auto">
+                        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front">
+                                    <span class="text-3xl">🔥</span>
+                                    <span class="text-[9px] text-yellow-400 font-pixel mt-2">CARTA 01</span>
+                                    <span class="text-xs text-slate-300 font-retro mt-1">Tu risa y alegría</span>
+                                </div>
+                                <div class="flip-card-back p-3">
+                                    <p class="font-retro text-sm sm:text-base leading-tight">Lo que más amo es tu risa y tu sonrisa, y más cuando me miras y sonríes de verdad. Me mata, me cambia el día por completo, es el momento favorito de todos los días. Me encanta cuando haces eso, me emociono mucho, ¡la amo!</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front">
+                                    <span class="text-3xl">💙</span>
+                                    <span class="text-[9px] text-yellow-400 font-pixel mt-2">CARTA 02</span>
+                                    <span class="text-xs text-slate-300 font-retro mt-1">Tiempo juntos</span>
+                                </div>
+                                <div class="flip-card-back p-3">
+                                    <p class="font-retro text-sm sm:text-base leading-tight">No importa si estamos jugando, viendo My Hero o alguna película, solo hablando o simplemente cada quien en sus cosas; cualquier momento a tu lado se vuelve mi favorito. Contigo el tiempo pasa súper rápido y me das una paz que no sé cómo explicarte. Eres mi lugar favorito y seguro, amo verte, escucharte, amo cada momento que pasamos juntos.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front">
+                                    <span class="text-3xl">⭐</span>
+                                    <span class="text-[9px] text-yellow-400 font-pixel mt-2">CARTA 03</span>
+                                    <span class="text-xs text-slate-300 font-retro mt-1">Tu forma de ser</span>
+                                </div>
+                                <div class="flip-card-back p-3">
+                                    <p class="font-retro text-sm sm:text-base leading-tight">Amo tu paciencia, tu ternura, tu dedicación y cómo te esfuerzas en todo lo que haces. Gracias por escucharme, por hacerme feliz, por preocuparte por mí, por ser ese lugar en el que siempre quiero estar. Eres un hombre muy hermoso en todo aspecto, me encanta cómo eres, cómo te comportas a veces como niñito JAJA. Me encantas, eres increíble.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front">
+                                    <span class="text-3xl">👑</span>
+                                    <span class="text-[9px] text-yellow-400 font-pixel mt-2">CARTA 04</span>
+                                    <span class="text-xs text-slate-300 font-retro mt-1">Como novio</span>
+                                </div>
+                                <div class="flip-card-back p-3">
+                                    <p class="font-retro text-sm sm:text-base leading-tight">Eres mi novio, mi mejor amigo, mi compañero, mi todo. No cambiaría ni un solo segundo de todo lo que hemos hecho juntos, eres mi mejor casualidad, mi mejor elección por siempre. No me arrepiento de nada, eres el mejor en todo. Te amo con mi vida, ¡mi vida!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="playBeep(); nextScene();" class="w-full py-2 bg-red-600 hover:bg-red-500 text-white font-pixel text-xs rounded-xl border-2 border-red-400">
+                        [ CONTINUAR ]
+                    </button>
+                </div>
+            `;
+        }
+
+        // SCENE 7: SPOTIMON CANCIONES SECRETAS
+        function renderSceneSpotimonSecret() {
+            let html = `
+                <div class="flex flex-col items-center justify-between w-full h-full space-y-2">
+                    <h3 class="text-xs sm:text-sm text-yellow-300 font-pixel text-center">🎵 SPOTIMON: PLAYLIST SECRETA</h3>
+                    <p class="text-slate-400 font-retro text-lg text-center">Toca una Pokéball para revelar la canción:</p>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 w-full my-auto overflow-y-auto max-h-[260px] p-1">
+            `;
+
+            secretSongs.forEach((song, idx) => {
+                html += `
+                    <div onclick="openMusicModal(${idx})" class="bg-slate-900 border-2 border-red-600 hover:border-yellow-400 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer transition transform hover:scale-105">
+                        <div class="w-10 h-10 rounded-full bg-red-600 border-2 border-white flex items-center justify-center text-xs animate-bounce">
+                            🔴
+                        </div>
+                        <span class="text-[8px] font-pixel text-yellow-400 mt-2">SECRETO #${idx + 1}</span>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                    <button onclick="playBeep(); nextScene();" class="w-full py-2 bg-red-600 hover:bg-red-500 text-white font-pixel text-xs rounded-xl border-2 border-red-400">
+                        [ CONTINUAR ]
+                    </button>
+                </div>
+            `;
+            return html;
+        }
+
+        function openMusicModal(idx) {
+            playBeep();
+            const song = secretSongs[idx];
+            document.getElementById('modal-song-title').innerText = song.titulo;
+            document.getElementById('modal-song-artist').innerText = song.artista;
+            document.getElementById('modal-song-dedication').innerText = song.dedicatoria;
+            document.getElementById('music-modal').classList.remove('hidden');
+        }
+
+        function closeMusicModal() {
+            document.getElementById('music-modal').classList.add('hidden');
+        }
+
+        // SCENE 8: MOCHILA DE OBJETOS
+        function renderSceneBag() {
+            return `
+                <div class="flex flex-col items-center justify-between w-full h-full space-y-3 font-retro">
+                    <div class="text-center">
+                        <span class="text-xs text-yellow-400 font-pixel block">INVENTARIO VIRTUAL</span>
+                        <h2 class="text-xl sm:text-2xl text-emerald-400 font-pixel mt-1">🎒 Mochila de Objetos</h2>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 w-full">
+                        <div class="bg-slate-900 border-2 border-pink-500 rounded-xl p-2 flex flex-col items-center text-center">
+                            <span class="text-2xl">🍬</span>
+                            <span class="text-xs font-pixel text-white mt-1">Caramelo Raro</span>
+                            <span class="text-[10px] text-slate-400">+21 Nivel Exp</span>
+                        </div>
+
+                        <div class="bg-slate-900 border-2 border-red-500 rounded-xl p-2 flex flex-col items-center text-center">
+                            <span class="text-2xl">🔴</span>
+                            <span class="text-xs font-pixel text-white mt-1">Poké Ball Esp.</span>
+                            <span class="text-[10px] text-slate-400">Ratio 100% Amor</span>
+                        </div>
+
+                        <div class="bg-slate-900 border-2 border-emerald-500 rounded-xl p-2 flex flex-col items-center text-center">
+                            <span class="text-2xl">💖</span>
+                            <span class="text-xs font-pixel text-white mt-1">Poción Máxima</span>
+                            <span class="text-[10px] text-slate-400">Cura días pesados</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 border-2 border-slate-700 rounded-xl p-3 w-full text-left space-y-2 text-sm sm:text-base text-slate-200">
+                        <p><strong class="text-yellow-400 font-pixel text-xs">Caramelo Raro:</strong> Cumples 21 años y desbloqueas un nuevo nivel. ¡Cada año te pones más lindote!</p>
+                        <p><strong class="text-red-400 font-pixel text-xs">Poké Ball Especial:</strong> Diseñada para atrapar tu atención a la distancia sin esfuerzo.</p>
+                        <p><strong class="text-emerald-400 font-pixel text-xs">Poción Máxima:</strong> Te la dejo guardada para cuando tengas un día pesado en tus juegos o cosas.</p>
+                    </div>
+
+                    <button onclick="playBeep(); nextScene();" class="w-full py-3 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold font-pixel text-xs sm:text-sm rounded-xl border-4 border-yellow-300 shadow-xl transition transform active:scale-95">
+                        [ CONTINUAR ]
+                    </button>
+                </div>
+            `;
+        }
+
+        // SCENE 9: POKÉTIENDA
+        function renderSceneShop() {
+            return `
+                <div class="flex flex-col items-center justify-between w-full h-full space-y-3 font-retro">
+                    <div class="w-full flex justify-between items-center bg-slate-900 border-2 border-cyan-500 rounded-xl px-3 py-2 text-xs font-pixel">
+                        <span class="text-cyan-400">🏪 PokéTienda</span>
+                        <span class="text-yellow-400">Dinero: ₱999,999</span>
+                    </div>
+
+                    <div class="w-full space-y-2">
+                        <div class="bg-slate-900 border-2 border-emerald-500 rounded-xl px-3 py-2.5 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🎮</span>
+                                <span class="font-pixel text-xs text-white">Pase de Juego</span>
+                            </div>
+                            <span class="font-pixel text-xs text-emerald-400">₱0 (GRATIS)</span>
+                        </div>
+
+                        <div class="bg-slate-900 border-2 border-blue-500 rounded-xl px-3 py-2.5 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🎧</span>
+                                <span class="font-pixel text-xs text-white">Pase de Compañía</span>
+                            </div>
+                            <span class="font-pixel text-xs text-blue-400">₱0 (GRATIS)</span>
+                        </div>
+
+                        <div class="bg-slate-900 border-2 border-pink-500 rounded-xl px-3 py-2.5 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">💌</span>
+                                <span class="font-pixel text-xs text-white">Mimos Virtuales</span>
+                            </div>
+                            <span class="font-pixel text-xs text-pink-400">₱0 (GRATIS)</span>
+                        </div>
+                    </div>
+
+                    <p class="text-center text-xs text-yellow-400 font-pixel">¡CUPONES ACTIVOS! Tu saldo es infinito por hoy.</p>
+
+                    <button onclick="playBeep(); nextScene();" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold font-pixel text-xs sm:text-sm rounded-xl border-4 border-blue-400 shadow-xl transition transform active:scale-95">
+                        [ CONTINUAR ]
+                    </button>
+                </div>
+            `;
+        }
+
+        // SCENE 10: INVENTARIO DE OBJETOS CLAVE
+        function renderSceneInventory() {
+            return `
+                <div class="flex flex-col items-center justify-between w-full h-full space-y-3 font-retro">
+                    <h2 class="text-center text-lg sm:text-xl text-yellow-400 font-pixel flex items-center justify-center gap-2">
+                        🔑 Objetos Clave Canjeados
+                    </h2>
+
+                    <div class="bg-slate-900 border-2 border-slate-700 rounded-xl p-4 w-full text-left space-y-3 text-sm sm:text-base text-slate-200">
+                        <p class="flex items-start gap-2">
+                            <span class="text-emerald-400">🔹</span>
+                            <span><strong class="text-emerald-400 font-pixel text-xs">PASE DE JUEGO:</strong> Boleto exclusivo para nuestra próxima sesión de juego o ver nuestra serie favorita. Hoy tú tienes el control absoluto.</span>
+                        </p>
+                        <p class="flex items-start gap-2">
+                            <span class="text-blue-400">🔹</span>
+                            <span><strong class="text-blue-400 font-pixel text-xs">PASE DE COMPAÑÍA:</strong> Válido para conectarnos sin prisas en la compu y acompañarnos.</span>
+                        </p>
+                        <p class="flex items-start gap-2">
+                            <span class="text-pink-400">🔹</span>
+                            <span><strong class="text-pink-400 font-pixel text-xs">RECARGA DE MIMOS:</strong> Recordatorio directo para cuando las partidas se pongan difíciles. Eres el mejor en todo.</span>
+                        </p>
+                    </div>
+
+                    <button onclick="playBeep(); nextScene();" class="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold font-pixel text-xs sm:text-sm rounded-xl border-4 border-purple-400 shadow-xl transition transform active:scale-95">
+                        [ COMPLETAR MISIÓN ]
+                    </button>
+                </div>
+            `;
+        }
+
+        // SCENE 11: FINAL (Misión Cumplida - AQUÍ ESTÁ TU TESTAMENTO)
+        function renderSceneSave() {
+            return `
+                <div class="flex flex-col items-center justify-between w-full h-full space-y-2 font-retro">
+                    <div class="text-center">
+                        <span class="text-xs text-yellow-400 font-pixel block">🏆 MISIÓN CUMPLIDA</span>
+                        <h2 class="text-base sm:text-lg text-yellow-300 font-pixel mt-1">¡Entrenador Kevin!</h2>
+                    </div>
+
+                    <div class="bg-slate-900 border-2 border-amber-700 rounded-xl p-3 w-full text-left space-y-2 text-sm sm:text-base text-slate-200 shadow-inner overflow-y-auto max-h-[280px] whitespace-pre-line">
+Bueno señor entrenador Kevin espero q estés preparado porque hoy comienza una nueva etapa de tu aventura Pokémon JAJAJAJA. No sé cuántas medallas llevas conseguidas ni cuántas regiones te quedan por recorrer pero estoy segura de q todavía hay muchísimos lugares por descubrir y un montón de Pokémon esperando cruzarse en tu camino. Y aunque no pueda acompañarte físicamente en cada ruta sí me hace mucha ilusión imaginar todas las aventuras q todavía te esperan.
+
+A veces pienso q la vida se parece un poquito a esos viajes por las distintas regiones. Nunca sabes exactamente qué Pokémon te vas a encontrar en la hierba alta ni qué personaje va a aparecer para cambiarte los planes JAJAJA. Hay caminos q se hacen fáciles y otros en los q toca esforzarse un poquito más pero cada experiencia termina formando parte de tu propia aventura. Y yo espero q este nuevo año te traiga encuentros bonitos momentos inesperados y muchísimas razones para seguir avanzando.
+
+También espero q consigas todas esas medallas q todavía tienes pendientes y q nunca te falten ganas de enfrentarte a nuevos desafíos. A veces toca pasar por un Centro Pokémon recuperar energías y tomarse un descansito antes de continuar. No tienes q demostrar todo el tiempo lo fuerte q eres ni ganar cada combate para sentir q estás avanzando. Hay logros q parecen pequeños pero también merecen celebrarse.
+
+Y si hablamos de equipos Pokémon espero q siempre tengas cerca personas q te hagan bien y con las q puedas contar durante el recorrido. De esas q no se van cuando aparece un rival complicado o cuando las cosas no salen como esperabas. Porque al final una aventura también se vuelve especial por todas las personas q forman parte de ella y por los recuerdos q vas juntando en el camino.
+
+Quiero q este nuevo año esté lleno de cosas q te emocionen tanto como encontrar un Pokémon q llevabas muchísimo tiempo buscando JAJAJAJA. Q puedas cumplir tus objetivos descubrir nuevas pasiones conocer lugares distintos y sorprenderte con todo lo q eres capaz de conseguir. Y cuando aparezcan días un poquito más difíciles espero q recuerdes q una mala batalla no significa q hayas perdido toda la aventura. Siempre queda otra ruta por explorar y muchísimas oportunidades por delante.
+
+Feliz cumpleaños mi niño hermoso. Espero q disfrutes muchísimo tu día y q esta nueva vuelta al sol venga con las mejores recompensas posibles. Yo voy a estar por acá celebrando tus victorias y alegrándome por cada cosa bonita q te pase. Y quién sabe capaz en alguna de todas esas aventuras termine apareciendo yo como un personaje inesperado de tu historia JAJAJAJA.
+
+Te amo muchísimo amoor
+Ahora sí entrenador Kevin prepara tu equipo q todavía quedan muchas regiones por conocer y muchísimas aventuras por vivir. ❤️
+                    </div>
+
+                    <button onclick="executeSave()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold font-pixel text-xs sm:text-sm rounded-xl border-4 border-emerald-300 shadow-xl transition transform active:scale-95">
+                        [ GUARDAR PARTIDA ]
+                    </button>
+                </div>
+            `;
+        }
+
+        function executeSave() {
+            playBeep();
+            triggerHearts();
+            alert("¡Partida Guardada con Éxito! Gracias por ser el mejor novio del mundo. ¡Te amo Kevin! ❤️");
+        }
+
+        function nextScene() {
+            if (currentScene < totalScenes - 1) {
+                currentScene++;
+                renderScene();
+            }
+        }
+
+        function playBeep() {
+            if (!isAudioOn) return;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.08);
+            } catch (e) {}
+        }
+
+        function toggleAudio() {
+            isAudioOn = !isAudioOn;
+            document.getElementById('audio-text').innerText = isAudioOn ? "ON" : "OFF";
+            document.getElementById('audio-icon').className = isAudioOn ? "fas fa-volume-up text-xs text-emerald-400" : "fas fa-volume-mute text-xs text-slate-500";
+        }
+
+        function triggerConfetti() {
+            try {
+                confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } });
+            } catch (e) {}
+        }
+
+        function triggerHearts() {
+            try {
+                confetti({ particleCount: 50, spread: 80, shapes: ['heart'], colors: ['#ff0000', '#ff69b4'] });
+            } catch (e) {}
+        }
+
+        window.onload = () => { renderScene(); };
+    </script>
+</body>
+</html>
